@@ -1,4 +1,4 @@
-const CACHE_NAME = "alfian-tour-kwitansi-v1";
+const CACHE_NAME = "alfian-tour-kwitansi-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
