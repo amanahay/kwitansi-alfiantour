@@ -114,11 +114,13 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    width: 100%;
   }
 
   .company-info {
     text-align: center;
-    flex: 0 0 45%;
+    flex: 0 0 44%;
+    min-width: 0;
   }
 
   .editable-text {
@@ -144,43 +146,53 @@
   }
 
   .logo-wrap {
-    flex: 0 0 25%;
+    flex: 0 0 22%;
+    min-width: 0;
     display: flex;
     justify-content: center;
     align-items: center;
   }
   .logo-wrap img {
-    max-width: 150px;
-    max-height: 72px;
+    max-width: 140px;
+    max-height: 70px;
     height: auto;
     object-fit: contain;
   }
 
   .form-fields {
-    flex: 0 0 30%;
+    flex: 0 0 34%;
+    min-width: 0;
     font-size: 11px;
     padding-top: 4px;
   }
   .form-fields .field-row {
     display: flex;
     margin-bottom: 4px;
-    align-items: end;
+    align-items: flex-end;
+    width: 100%;
+    min-width: 0;
   }
   .form-fields .field-label {
-    flex: 0 0 78px;
+    flex: 0 0 74px;
     font-weight: bold;
     white-space: nowrap;
   }
-  .form-fields .field-colon { flex: 0 0 10px; }
+  .form-fields .field-colon {
+    flex: 0 0 10px;
+    text-align: center;
+  }
   .field-input {
-    flex: 1;
-    min-width: 0;
     border: 0;
     border-bottom: 1px solid #000;
     outline: none;
     background: transparent;
     height: 18px;
     padding: 0 2px;
+  }
+  .form-fields .field-input {
+    flex: 1 1 0;
+    min-width: 0;
+    width: 0;
   }
   .field-input:focus,
   .cell-input:focus,
@@ -398,31 +410,108 @@
   }
 
 
-  /* ===== PWA INSTALL BANNER ===== */
+  /* ===== PWA INSTALL BANNER (FLOATING BOTTOM CTA) ===== */
+  @keyframes slideUpBanner {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 30px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+
   .install-banner {
-    width: 860px;
-    margin: 12px auto 0;
-    background: #fff;
-    border: 1px solid #cbd5e1;
-    box-shadow: 0 4px 18px rgba(0,0,0,.10);
-    padding: 10px 12px;
+    position: fixed;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    width: min(92vw, 560px);
+    background: rgba(17, 24, 39, 0.96);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.38);
+    padding: 12px 16px;
     display: none;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     font-size: 13px;
+    backdrop-filter: blur(10px);
   }
-  .install-banner.show { display:flex; }
-  .install-banner strong { display:block; margin-bottom:2px; }
-  .install-banner .install-copy { flex:1; }
+  .install-banner.show {
+    display: flex;
+    animation: slideUpBanner 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  .install-banner-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: #1f2937;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,.3);
+  }
+  .install-banner-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .install-banner .install-copy {
+    flex: 1;
+    min-width: 0;
+  }
+  .install-banner strong {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 2px;
+    letter-spacing: 0.2px;
+  }
+  .install-banner span {
+    display: block;
+    font-size: 11px;
+    color: #cbd5e1;
+    line-height: 1.35;
+  }
+  .install-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
   .install-banner button {
-    border:0;
-    border-radius:5px;
-    padding:8px 10px;
-    cursor:pointer;
-    font-weight:700;
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 14px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 12px;
+    transition: background 0.15s, transform 0.15s;
   }
-  .install-main { background:#111827; color:#fff; }
-  .install-close { background:#e5e7eb; color:#111; }
+  .install-main {
+    background: #2563eb;
+    color: #fff;
+    box-shadow: 0 3px 10px rgba(37, 99, 235, 0.4);
+  }
+  .install-main:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+  }
+  .install-close {
+    background: rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+  }
+  .install-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
 
   /* ===== PRINT ===== */
   @media print {
@@ -481,12 +570,17 @@
 </div>
 
 <div class="install-banner no-print" id="installBanner">
+  <div class="install-banner-icon">
+    <img src="icon-192.png" alt="Icon Kwitansi">
+  </div>
   <div class="install-copy">
     <strong>Pasang Kwitansi Alfian Tour di layar utama</strong>
-    <span id="installMessage">Setelah terpasang, aplikasi dapat dibuka seperti aplikasi biasa dan tetap bekerja offline setelah kunjungan pertama.</span>
+    <span id="installMessage">Setelah terpasang, aplikasi dapat dibuka cepat dari beranda dan tetap bekerja offline.</span>
   </div>
-  <button class="install-main" id="installBannerBtn" onclick="installApp()">Instal</button>
-  <button class="install-close" onclick="dismissInstallBanner()">Nanti</button>
+  <div class="install-actions">
+    <button class="install-main" id="installBannerBtn" onclick="installApp()">📲 Instal</button>
+    <button class="install-close" onclick="dismissInstallBanner()">Nanti</button>
+  </div>
 </div>
 
 <div class="page">
@@ -940,14 +1034,14 @@ function isIOS(){
   return /iphone|ipad|ipod/i.test(navigator.userAgent);
 }
 function showInstallBanner(message, canInstall=true){
-  if(localStorage.getItem("alfianInstallDismissed")==="1") return;
-  installMessage.textContent = message;
+  if(localStorage.getItem("alfianInstallDismissed_v2")==="1") return;
+  if(message) installMessage.textContent = message;
   installBanner.classList.add("show");
   installBannerBtn.style.display = canInstall ? "" : "none";
 }
 function dismissInstallBanner(){
   installBanner.classList.remove("show");
-  localStorage.setItem("alfianInstallDismissed","1");
+  localStorage.setItem("alfianInstallDismissed_v2","1");
 }
 async function installApp(){
   if(deferredInstallPrompt){
@@ -963,7 +1057,7 @@ async function installApp(){
   if(isIOS()){
     alert('Di iPhone/iPad: buka menu Share di Safari lalu pilih "Add to Home Screen" / "Tambahkan ke Layar Utama".');
   }else{
-    alert("Jika tombol instal belum tersedia, buka halaman ini melalui HTTPS di Chrome/Edge lalu muat ulang.");
+    alert("Untuk memasang aplikasi: buka menu browser (titik tiga di kanan atas) lalu pilih 'Pasang Aplikasi' atau 'Tambahkan ke Layar Utama'.");
   }
 }
 
@@ -971,14 +1065,14 @@ window.addEventListener("beforeinstallprompt", e=>{
   e.preventDefault();
   deferredInstallPrompt = e;
   toolbarInstallBtn.style.display="";
-  showInstallBanner("Pasang ke layar utama. Setelah kunjungan pertama, data dan aplikasi dapat digunakan offline.", true);
+  showInstallBanner("Pasang ke layar utama agar bisa dibuka cepat langsung dari HP & bekerja offline.", true);
 });
 
 window.addEventListener("appinstalled", ()=>{
   deferredInstallPrompt=null;
   installBanner.classList.remove("show");
   toolbarInstallBtn.style.display="none";
-  localStorage.removeItem("alfianInstallDismissed");
+  localStorage.removeItem("alfianInstallDismissed_v2");
   flash("Aplikasi berhasil dipasang.");
 });
 
@@ -988,12 +1082,22 @@ if("serviceWorker" in navigator && (location.protocol==="https:" || location.hos
   });
 }
 
-window.addEventListener("load", ()=>{
+function checkAndShowInstallBanner(){
   if(isStandalone()) return;
-  if(isIOS()){
-    showInstallBanner('Di iPhone/iPad: buka lewat Safari, tekan Share lalu pilih "Tambahkan ke Layar Utama".', false);
-  }
-});
+  setTimeout(()=>{
+    if(isIOS()){
+      showInstallBanner('Di iPhone/iPad: buka lewat Safari, tekan Share lalu pilih "Tambahkan ke Layar Utama".', false);
+    }else{
+      showInstallBanner('Setelah terpasang, aplikasi dapat dibuka cepat dari beranda HP & bekerja offline.', true);
+    }
+  }, 700);
+}
+
+if(document.readyState === "complete" || document.readyState === "interactive"){
+  checkAndShowInstallBanner();
+} else {
+  window.addEventListener("load", checkAndShowInstallBanner);
+}
 
 
 initRows(1,4);
