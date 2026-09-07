@@ -973,37 +973,6 @@ function renderStamps(){
     layer.appendChild(el);
     bindStamp(el);
   });
-  rotate.addEventListener("pointerdown",event=>{
-    if(viewOnly) return;
-    event.stopPropagation();
-    selectStamp(el);
-    const layer=document.getElementById("stampLayer");
-    const rect=el.getBoundingClientRect();
-    const centerX=rect.left+rect.width/2;
-    const centerY=rect.top+rect.height/2;
-    const stamp=getStamp(el.dataset.id);
-    const startRotation=Number(stamp?.rotation)||0;
-    const angleAtStart=Math.atan2(event.clientY-centerY,event.clientX-centerX);
-    const move=moveEvent=>{
-      const currentAngle=Math.atan2(moveEvent.clientY-centerY,moveEvent.clientX-centerX);
-      let degrees=startRotation+(currentAngle-angleAtStart)*180/Math.PI;
-      if(degrees>180) degrees-=360;
-      if(degrees<-180) degrees+=360;
-      el.style.transform=`rotate(${degrees}deg)`;
-      if(stamp) stamp.rotation=Math.round(degrees);
-    };
-    const stop=()=>{
-      rotate.releasePointerCapture?.(event.pointerId);
-      rotate.removeEventListener("pointermove",move);
-      rotate.removeEventListener("pointerup",stop);
-      rotate.removeEventListener("pointercancel",stop);
-      scheduleDraft();
-    };
-    rotate.setPointerCapture?.(event.pointerId);
-    rotate.addEventListener("pointermove",move);
-    rotate.addEventListener("pointerup",stop);
-    rotate.addEventListener("pointercancel",stop);
-  });
 }
 
 function getStamp(id){
@@ -1091,6 +1060,34 @@ function bindStamp(el){
     resize.addEventListener("pointermove",move);
     resize.addEventListener("pointerup",stop);
     resize.addEventListener("pointercancel",stop);
+  });
+  rotate.addEventListener("pointerdown",event=>{
+    if(viewOnly) return;
+    event.stopPropagation();
+    selectStamp(el);
+    const rect=el.getBoundingClientRect();
+    const centerX=rect.left+rect.width/2;
+    const centerY=rect.top+rect.height/2;
+    const stamp=getStamp(el.dataset.id);
+    const startRotation=Number(stamp?.rotation)||0;
+    const angleAtStart=Math.atan2(event.clientY-centerY,event.clientX-centerX);
+    const move=moveEvent=>{
+      const currentAngle=Math.atan2(moveEvent.clientY-centerY,moveEvent.clientX-centerX);
+      const degrees=startRotation+(currentAngle-angleAtStart)*180/Math.PI;
+      el.style.transform=`rotate(${degrees}deg)`;
+      if(stamp) stamp.rotation=Math.round(degrees);
+    };
+    const stop=()=>{
+      rotate.releasePointerCapture?.(event.pointerId);
+      rotate.removeEventListener("pointermove",move);
+      rotate.removeEventListener("pointerup",stop);
+      rotate.removeEventListener("pointercancel",stop);
+      scheduleDraft();
+    };
+    rotate.setPointerCapture?.(event.pointerId);
+    rotate.addEventListener("pointermove",move);
+    rotate.addEventListener("pointerup",stop);
+    rotate.addEventListener("pointercancel",stop);
   });
 }
 
