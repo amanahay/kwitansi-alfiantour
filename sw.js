@@ -1,11 +1,12 @@
-const CACHE_NAME = "alfian-tour-kwitansi-v2";
+const CACHE_NAME = "alfian-tour-kwitansi-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icon-192.png",
   "./icon-512.png",
-  "./og-image.jpg"
+  "./og-image.jpg",
+  "./stamp-transparent.png"
 ];
 
 self.addEventListener("install", event => {

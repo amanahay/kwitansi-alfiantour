@@ -13,6 +13,8 @@ Aplikasi ini dapat berjalan langsung di browser, diinstal di HP/Desktop layaknya
 - **Penyimpanan Lokal (CRUD):** Simpan, ubah, buka kembali, dan hapus draft kwitansi langsung di browser via `localStorage`.
 - **Perhitungan Otomatis:** Menghitung total, sisa tagihan/pelunasan, serta konversi angka ke terbilang otomatis.
 - **Cetak & Export PDF:** Template ukuran cetak kwitansi standar A4/format faktur yang rapi dan siap cetak.
+- **Stempel canvas:** Tambahkan beberapa stempel transparan, geser ke seluruh area halaman, dan ubah ukurannya dengan handle.
+- **Export/Import JSON:** Manajemen dapat mengirim file JSON; penerima dapat mengimpor dan melihat dokumen dalam mode hanya lihat.
 - **Preview WhatsApp / Open Graph:** Dilengkapi metadata Open Graph dan image preview (`og-image.jpg`) saat tautan dibagikan via WhatsApp atau media sosial.
 
 ---
@@ -26,6 +28,7 @@ Aplikasi ini dapat berjalan langsung di browser, diinstal di HP/Desktop layaknya
 ├── icon-192.png            # Ikon aplikasi (192x192 px)
 ├── icon-512.png            # Ikon aplikasi (512x512 px)
 ├── og-image.jpg            # Gambar banner preview Open Graph / WhatsApp (1200x630 px)
+├── stamp-transparent.png   # Stempel Alfian Tour dengan latar transparan
 ├── README.txt              # Catatan panduan penggunaan dasar
 └── README.md               # Dokumentasi proyek
 ```
