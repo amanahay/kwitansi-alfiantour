@@ -113,7 +113,7 @@
   .stamp-layer {
     position:absolute;
     inset:0;
-    z-index:20;
+    z-index:100;
     pointer-events:none;
   }
   .stamp-object {
@@ -124,6 +124,7 @@
     pointer-events:auto;
     touch-action:none;
     user-select:none;
+    z-index:1;
   }
   .stamp-object img {
     display:block;
@@ -135,9 +136,11 @@
   .stamp-object.selected {
     outline:1px dashed #2563eb;
     outline-offset:2px;
+    z-index:2;
   }
   .stamp-remove,
-  .stamp-resize {
+  .stamp-resize,
+  .stamp-rotate {
     position:absolute;
     z-index:2;
     border:0;
@@ -165,10 +168,26 @@
     background:#2563eb;
     cursor:nwse-resize;
   }
+  .stamp-rotate {
+    top:-8px;
+    left:-8px;
+    width:18px;
+    height:18px;
+    border:2px solid #fff;
+    border-radius:50%;
+    background:#7c3aed;
+    color:#fff;
+    font-size:11px;
+    line-height:14px;
+    padding:0;
+    cursor:grab;
+  }
   .stamp-object:not(.selected) .stamp-remove,
   .stamp-object:not(.selected) .stamp-resize,
+  .stamp-object:not(.selected) .stamp-rotate,
   .view-only .stamp-remove,
-  .view-only .stamp-resize {
+  .view-only .stamp-resize,
+  .view-only .stamp-rotate {
     display:none;
   }
   .view-only .stamp-object {
@@ -664,6 +683,7 @@
     .stamp-layer { z-index:30; }
     .stamp-remove,
     .stamp-resize,
+    .stamp-rotate,
     .stamp-object.selected { outline:0 !important; }
   }
 </style>
@@ -675,13 +695,12 @@
   <button class="btn-blue editor-control" onclick="saveRecord()">Simpan</button>
   <button class="btn-green" onclick="window.print()">Cetak / PDF</button>
   <button class="btn-white editor-control" onclick="addStamp()">+ Stempel</button>
+  <button class="btn-white editor-control" onclick="duplicateSelectedStamp()">Duplikat Stempel</button>
   <button class="btn-white" onclick="exportJSON()">Export JSON</button>
   <button class="btn-white editor-control" onclick="document.getElementById('importJSONInput').click()">Import JSON</button>
   <input id="importJSONInput" type="file" accept="application/json,.json" hidden>
   <span class="view-only-badge" id="viewOnlyBadge">Mode hasil import — hanya lihat</span>
   <button class="btn-white" id="toolbarInstallBtn" onclick="installApp()" style="display:none">Instal Aplikasi</button>
-  <button class="btn-white editor-control" onclick="copyReceipt(1,2)">Salin 1 → 2</button>
-  <button class="btn-white editor-control" onclick="copyReceipt(2,1)">Salin 2 → 1</button>
   <button class="btn-amber editor-control" onclick="resetAll()">Reset</button>
   <div class="saved-wrap">
     <select id="recordSelect"><option value="">— Data tersimpan —</option></select>
@@ -707,7 +726,6 @@
 
 <div class="page">
   <div class="kwitansi" id="receipt1"></div>
-  <div class="kwitansi" id="receipt2"></div>
   <div class="stamp-layer" id="stampLayer" aria-label="Canvas stempel"></div>
 </div>
 
@@ -897,7 +915,6 @@ function receiptTemplate(n){
 }
 
 document.getElementById("receipt1").innerHTML = receiptTemplate(1);
-document.getElementById("receipt2").innerHTML = receiptTemplate(2);
 
 function root(n){ return document.getElementById("receipt"+n); }
 
@@ -914,6 +931,28 @@ function selectStamp(el){
   if(el) el.classList.add("selected");
 }
 
+function duplicateStamp(stamp){
+  if(viewOnly || !stamp) return;
+  const id=`stamp-${Date.now()}-${++stampCounter}`;
+  stamps.push({
+    id,
+    src:stamp.src||STAMP_ASSET,
+    x:clamp((Number(stamp.x)||0)+3,0,95),
+    y:clamp((Number(stamp.y)||0)+3,0,95),
+    width:clamp(Number(stamp.width)||15,5,45),
+    rotation:Number(stamp.rotation)||0
+  });
+  renderStamps();
+  selectStamp(document.querySelector(`[data-id="${id}"]`));
+  scheduleDraft();
+}
+
+function duplicateSelectedStamp(){
+  const selected=document.querySelector(".stamp-object.selected");
+  if(!selected){ flash("Pilih stempel yang ingin diduplikasi."); return; }
+  duplicateStamp(getStamp(selected.dataset.id));
+}
+
 function renderStamps(){
   const layer=document.getElementById("stampLayer");
   layer.innerHTML="";
@@ -924,13 +963,46 @@ function renderStamps(){
     el.style.left=`${stamp.x}%`;
     el.style.top=`${stamp.y}%`;
     el.style.width=`${stamp.width}%`;
+    el.style.transform=`rotate(${stamp.rotation||0}deg)`;
     el.innerHTML=`
       <img src="${esc(stamp.src||STAMP_ASSET)}" alt="Stempel">
       <button type="button" class="stamp-remove no-print" aria-label="Hapus stempel">×</button>
       <button type="button" class="stamp-resize no-print" aria-label="Ubah ukuran stempel"></button>
+      <button type="button" class="stamp-rotate no-print" aria-label="Putar stempel">↻</button>
     `;
     layer.appendChild(el);
     bindStamp(el);
+  });
+  rotate.addEventListener("pointerdown",event=>{
+    if(viewOnly) return;
+    event.stopPropagation();
+    selectStamp(el);
+    const layer=document.getElementById("stampLayer");
+    const rect=el.getBoundingClientRect();
+    const centerX=rect.left+rect.width/2;
+    const centerY=rect.top+rect.height/2;
+    const stamp=getStamp(el.dataset.id);
+    const startRotation=Number(stamp?.rotation)||0;
+    const angleAtStart=Math.atan2(event.clientY-centerY,event.clientX-centerX);
+    const move=moveEvent=>{
+      const currentAngle=Math.atan2(moveEvent.clientY-centerY,moveEvent.clientX-centerX);
+      let degrees=startRotation+(currentAngle-angleAtStart)*180/Math.PI;
+      if(degrees>180) degrees-=360;
+      if(degrees<-180) degrees+=360;
+      el.style.transform=`rotate(${degrees}deg)`;
+      if(stamp) stamp.rotation=Math.round(degrees);
+    };
+    const stop=()=>{
+      rotate.releasePointerCapture?.(event.pointerId);
+      rotate.removeEventListener("pointermove",move);
+      rotate.removeEventListener("pointerup",stop);
+      rotate.removeEventListener("pointercancel",stop);
+      scheduleDraft();
+    };
+    rotate.setPointerCapture?.(event.pointerId);
+    rotate.addEventListener("pointermove",move);
+    rotate.addEventListener("pointerup",stop);
+    rotate.addEventListener("pointercancel",stop);
   });
 }
 
@@ -949,6 +1021,7 @@ function updateStampFromElement(el){
 function bindStamp(el){
   const remove=el.querySelector(".stamp-remove");
   const resize=el.querySelector(".stamp-resize");
+  const rotate=el.querySelector(".stamp-rotate");
   remove.addEventListener("click",event=>{
     event.stopPropagation();
     stamps=stamps.filter(stamp=>stamp.id!==el.dataset.id);
@@ -956,7 +1029,7 @@ function bindStamp(el){
     scheduleDraft();
   });
   el.addEventListener("pointerdown",event=>{
-    if(viewOnly || event.target===resize || event.target===remove) return;
+    if(viewOnly || event.target===resize || event.target===remove || event.target===rotate) return;
     selectStamp(el);
     const layer=document.getElementById("stampLayer");
     const rect=layer.getBoundingClientRect();
@@ -986,6 +1059,11 @@ function bindStamp(el){
     el.addEventListener("pointermove",move);
     el.addEventListener("pointerup",stop);
     el.addEventListener("pointercancel",stop);
+  });
+  el.addEventListener("dblclick",event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    duplicateStamp(getStamp(el.dataset.id));
   });
   resize.addEventListener("pointerdown",event=>{
     if(viewOnly) return;
@@ -1032,7 +1110,8 @@ function collectStamps(){
     src:stamp.src||STAMP_ASSET,
     x:Math.round(Number(stamp.x)||0),
     y:Math.round(Number(stamp.y)||0),
-    width:Math.round(Number(stamp.width)||15)
+    width:Math.round(Number(stamp.width)||15),
+    rotation:Math.round(Number(stamp.rotation)||0)
   }));
 }
 
@@ -1042,7 +1121,8 @@ function applyStamps(data){
     src:stamp.src||STAMP_ASSET,
     x:clamp(Number(stamp.x)||0,0,95),
     y:clamp(Number(stamp.y)||0,0,95),
-    width:clamp(Number(stamp.width)||15,5,45)
+    width:clamp(Number(stamp.width)||15,5,45),
+    rotation:Number(stamp.rotation)||0
   }));
   renderStamps();
 }
@@ -1175,7 +1255,6 @@ function collectDocument(){
     version:1,
     exportedAt:new Date().toISOString(),
     r1:collect(1),
-    r2:collect(2),
     stamps:collectStamps()
   };
 }
@@ -1211,7 +1290,6 @@ function applyDocument(data){
   }
   suppressDraft=true;
   apply(1,data.r1||{});
-  apply(2,data.r2||{});
   applyStamps(data.stamps);
   suppressDraft=false;
 }
@@ -1274,7 +1352,6 @@ function saveRecord(){
     id:currentId||("KW-"+Date.now()),
     updatedAt:new Date().toISOString(),
     r1:collect(1),
-    r2:collect(2),
     stamps:collectStamps()
   };
 
@@ -1315,7 +1392,6 @@ function loadSelected(){
   suppressDraft=true;
   currentId=id;
   apply(1,x.r1);
-  apply(2,x.r2);
   applyStamps(x.stamps);
   suppressDraft=false;
   flash("Data dibuka.");
@@ -1339,18 +1415,16 @@ function setToday(){
   const dd=String(d.getDate()).padStart(2,"0");
   const s=`${yyyy}-${mm}-${dd}`;
   root(1).querySelector('[data-k="tanggal"]').value=formatTanggal(s);
-  root(2).querySelector('[data-k="tanggal"]').value=formatTanggal(s);
   root(1).querySelector('.date-picker').value=s;
-  root(2).querySelector('.date-picker').value=s;
 }
 
 function resetAll(){
   if(viewOnly){ flash("Mode hasil import hanya dapat dilihat."); return; }
-  if(!confirm("Reset kedua kwitansi? Data yang sudah disimpan tetap ada.")) return;
+  if(!confirm("Reset kwitansi? Data yang sudah disimpan tetap ada.")) return;
   suppressDraft=true;
   currentId=null;
 
-  [1,2].forEach(n=>{
+  [1].forEach(n=>{
     initRows(n,4);
     root(n).querySelectorAll(".field").forEach(el=>{
       el.value=el.dataset.k === "tempat" ? defaults.tempat : "";
@@ -1375,7 +1449,7 @@ function scheduleDraft(){
   if(suppressDraft || viewOnly) return;
   clearTimeout(draftTimer);
   draftTimer=setTimeout(()=>{
-    localStorage.setItem(DRAFT_KEY,JSON.stringify({r1:collect(1),r2:collect(2),stamps:collectStamps()}));
+    localStorage.setItem(DRAFT_KEY,JSON.stringify({r1:collect(1),stamps:collectStamps()}));
   },450);
 }
 
@@ -1387,7 +1461,6 @@ function restoreDraft(){
       const d=JSON.parse(raw);
       suppressDraft=true;
       apply(1,d.r1);
-      apply(2,d.r2);
       applyStamps(d.stamps);
       suppressDraft=false;
     }
@@ -1487,9 +1560,7 @@ document.getElementById("importJSONInput").addEventListener("change",event=>{
 });
 
 initRows(1,4);
-initRows(2,4);
 bind(1);
-bind(2);
 applyStamps(defaultStamps());
 setToday();
 refreshRecords();
