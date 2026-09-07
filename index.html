@@ -181,6 +181,8 @@
     line-height:14px;
     padding:0;
     cursor:grab;
+    pointer-events:auto;
+    touch-action:none;
   }
   .stamp-object:not(.selected) .stamp-remove,
   .stamp-object:not(.selected) .stamp-resize,
@@ -953,6 +955,17 @@ function duplicateSelectedStamp(){
   duplicateStamp(getStamp(selected.dataset.id));
 }
 
+function rotateStampBy(id, degrees=15){
+  if(viewOnly) return;
+  const stamp=getStamp(id);
+  const el=[...document.querySelectorAll(".stamp-object")].find(node=>node.dataset.id===id);
+  if(!stamp || !el) return;
+  stamp.rotation=(Number(stamp.rotation)||0)+degrees;
+  el.style.transform=`rotate(${stamp.rotation}deg)`;
+  selectStamp(el);
+  scheduleDraft();
+}
+
 function renderStamps(){
   const layer=document.getElementById("stampLayer");
   layer.innerHTML="";
@@ -1088,6 +1101,11 @@ function bindStamp(el){
     rotate.addEventListener("pointermove",move);
     rotate.addEventListener("pointerup",stop);
     rotate.addEventListener("pointercancel",stop);
+  });
+  rotate.addEventListener("click",event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    rotateStampBy(el.dataset.id);
   });
 }
 
